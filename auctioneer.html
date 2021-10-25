@@ -1,8 +1,70 @@
 <html>
     <head>
-        <title></title>
+        <title>Auctioneer Page</title>
+
+        <style>
+            body {
+                background-color: lightslategray;
+            }
+            .container {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color:whitesmoke;
+                width: 500px;
+            }
+            h1 {
+                text-align: center;
+            }
+            form {
+                display: grid;
+                grid-template-columns: 185px 1fr;
+                row-gap: 15px;
+                column-gap: 15px;
+
+            }
+            label {
+                grid-column: 1 / 2;
+                text-align: right;
+                padding: 0 10px 0 10px;
+            }
+            input {
+                grid-column: 2 / 3;
+                margin-right: 20px;
+            }
+            #submitBtn {
+                width: 150px;
+            }
+        </style>
     </head>
     <body>
-        
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+        <div class="container">
+            <h1>Auctioneer</h1>
+
+            <form id="auction">
+                <label for="name">Item name: </label><input type="text" id="name" placeholder="Item name"></input>
+                <label for="pric">Price ($): </label><input type="number" id="price" placeholder="0"></input>
+                <label for="time">Time (between 0 & 80s): </label><input type="range" id="time" name="time" min="10" max="80"></input>
+                <input type="submit" id="submitBtn">
+            </form>
+        </div>
+
+        <script>
+            var socket = io();
+
+            $("#auction").submit( function() {
+                socket.emit("auctionContent", {
+                    name: $("#name").val(),
+                    price: $("#price").val(),
+                    time: $("#time").val()
+                });
+                $("#auction").val(' ');
+            });
+
+        </script>
     </body>
 </html>
