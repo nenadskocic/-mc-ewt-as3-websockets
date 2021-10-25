@@ -12,5 +12,10 @@
   },
   "author": "Nenad Skocic, 000107650",
   "license": "ISC",
-  "homepage": "https://bitbucket.org/nskocic/mc-ewt-as3-websockets#readme"
+  "homepage": "https://bitbucket.org/nskocic/mc-ewt-as3-websockets#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.14",
+    "socket.io": "^4.3.1"
+  }
 }
