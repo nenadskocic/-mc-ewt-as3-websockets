@@ -6,7 +6,7 @@
             body {
                 background-color: lightslategray;
             }
-            .container {
+            #formContainer {
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -36,35 +36,98 @@
             #submitBtn {
                 width: 150px;
             }
+            #timerContainer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                background-color:whitesmoke;
+                width: 450px;
+                font-size: 42px;
+            }
+            #timerCountdown {
+                color: red;
+                align-items: center;
+                padding-left: 20px;
+            }
+            .error {
+                color: red;
+                width: 100%;
+                list-style-type: none;
+                padding: 0 0 20px 20px;
+            }
         </style>
     </head>
     <body>
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 
-        <div class="container">
+        <div id="formContainer">
             <h1>Auctioneer</h1>
 
             <form id="auction">
-                <label for="name">Item name: </label><input type="text" id="name" placeholder="Item name"></input>
-                <label for="pric">Price ($): </label><input type="number" id="price" placeholder="0"></input>
+                <label for="name">Item name: </label><input type="text" id="name"></input>
+                <label for="price">Price ($): </label><input type="number" id="price"></input>
                 <label for="time">Time (between 0 & 80s): </label><input type="range" id="time" name="time" min="10" max="80"></input>
                 <input type="submit" id="submitBtn">
             </form>
+
+            <div class="error"></div>
+        </div>
+
+        <div id="timerContainer">
+            Timer: <span id="timerCountdown"></span>
         </div>
 
         <script>
             var socket = io();
 
-            $("#auction").submit( function() {
-                socket.emit("auctionContent", {
-                    name: $("#name").val(),
-                    price: $("#price").val(),
-                    time: $("#time").val()
-                });
-                $("#auction").val(' ');
+            $("#auction").submit( function(e) {
+                var formFlag = true;
+
+                if($("#name").val() == "") {
+                    document.getElementsByClassName("error")[0].innerHTML = "<li>" + 'Item name required!' + "</li>";
+                    e.preventDefault();
+                    formFlag = false;
+                } else {
+                    document.getElementsByClassName("error")[0].innerHTML = "";
+                    e.preventDefault();
+                    formFlag = true;
+                }
+
+                if($("#price").val() < 1) {
+                    document.getElementsByClassName("error")[0].innerHTML += "<li>" + 'Price must be greater than $0' + "</li>";
+                    e.preventDefault();
+                    formFlag = false;
+                } else {
+                    document.getElementsByClassName("error")[0].innerHTML = "";
+                    e.preventDefault();
+                    formFlag = true;
+                }
+
+                if(formFlag === true) {
+                    socket.emit("auctionContent", {
+                        name: $("#name").val(),
+                        price: $("#price").val(),
+                        time: $("#time").val()
+                    });
+                    e.preventDefault();
+                    $("#auction").find('input[type="text"]').val('');
+                    $("#auction").find('input[type="number"]').val('');
+                    $("#auction").find('input[type="range"]').val('');
+                    $("#formContainer").hide();
+                }
             });
 
+            socket.on("timer", function(data) {
+                document.getElementById("timerCountdown").innerHTML = data;
+
+                if(document.getElementById("timerCountdown").innerHTML === "Auction is over") {
+                    $("#formContainer").show();
+                    document.getElementById("timerCountdown").innerHTML = "";
+                }
+            });
         </script>
+
+
     </body>
 </html>
