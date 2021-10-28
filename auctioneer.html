@@ -4,24 +4,27 @@
 
         <style>
             body {
-                background-color: lightslategray;
+                background-color:beige;
             }
             #formContainer {
                 position: absolute;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background-color:whitesmoke;
-                width: 500px;
+                background-color:gray;
+                width: 750px;
+                font-size: 24px;
             }
             h1 {
                 text-align: center;
+                color: white;
             }
             form {
                 display: grid;
                 grid-template-columns: 185px 1fr;
                 row-gap: 15px;
                 column-gap: 15px;
+                color: white;
 
             }
             label {
@@ -32,6 +35,7 @@
             input {
                 grid-column: 2 / 3;
                 margin-right: 20px;
+                font-size: 24px;
             }
             #submitBtn {
                 width: 150px;
@@ -40,20 +44,25 @@
                 position: absolute;
                 top: 0;
                 left: 0;
-                background-color:whitesmoke;
+                background-color:gray;
+                color: white;
                 width: 450px;
                 font-size: 42px;
             }
             #timerCountdown {
-                color: red;
+                color: lightcoral;
                 align-items: center;
                 padding-left: 20px;
             }
             .error {
-                color: red;
+                color: lightcoral;
                 width: 100%;
                 list-style-type: none;
-                padding: 0 0 20px 20px;
+                text-align: right;
+                padding-bottom: 20px;
+            }
+            .error li {
+                padding-right: 20px;
             }
         </style>
     </head>
@@ -65,9 +74,9 @@
             <h1>Auctioneer</h1>
 
             <form id="auction">
-                <label for="name">Item name: </label><input type="text" id="name"></input>
+                <label for="itemName">Item name: </label><input type="text" id="itemName"></input>
                 <label for="price">Price ($): </label><input type="number" id="price"></input>
-                <label for="time">Time (between 0 & 80s): </label><input type="range" id="time" name="time" min="10" max="80"></input>
+                <label for="time">Time (0-80s): </label><input type="range" id="time" name="time" min="10" max="80"></input>
                 <input type="submit" id="submitBtn">
             </form>
 
@@ -84,7 +93,7 @@
             $("#auction").submit( function(e) {
                 var formFlag = true;
 
-                if($("#name").val() == "") {
+                if($("#itemName").val() == "") {
                     document.getElementsByClassName("error")[0].innerHTML = "<li>" + 'Item name required!' + "</li>";
                     e.preventDefault();
                     formFlag = false;
@@ -106,7 +115,7 @@
 
                 if(formFlag === true) {
                     socket.emit("auctionContent", {
-                        name: $("#name").val(),
+                        itemName: $("#itemName").val(),
                         price: $("#price").val(),
                         time: $("#time").val()
                     });
@@ -127,7 +136,5 @@
                 }
             });
         </script>
-
-
     </body>
 </html>
