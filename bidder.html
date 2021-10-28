@@ -1,8 +1,74 @@
 <html>
     <head>
-        <title></title>
+        <title>Bidder Pager</title>
+
+        <style>
+            body {
+                background-color: lightsalmon;
+            }
+            #bRegContainer, #bWaitContainer {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color:gray;
+                width: 800px;
+                height: 100px;
+                text-align: center;
+                display: table;
+            }
+            #bRegContainer span {
+                vertical-align: middle;
+                display: table-cell;
+                font-size: 30px;
+            }
+            #bRegContainer label {
+                color: white;
+            }
+            #bNameForm {
+                margin-bottom: 0;
+            }
+            #bName, #submitBtn, #bWaitContainer {
+                font-size: 30px;
+                vertical-align: middle;
+            }
+            #bWaitContainer {
+                vertical-align: middle;
+                display: table-cell;
+                color: white;
+            }
+
+        </style>
     </head>
     <body>
-        
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+
+        <div id="bRegContainer">
+            <span>
+                <form id="bNameForm">
+                    <label>Enter your name: </label><input type="text" id="bName"></input>
+                    <input type="submit" id="submitBtn">
+                </form>    
+            </span>
+        </div>
+
+        <div id="bWaitContainer">
+            <p>Waiting for the next auction to begin...</p>
+        </div>
+
+        <script>
+             var socket = io();
+             $("#bWaitContainer").hide();
+             
+            $("#bNameForm").submit( function(e) {
+                socket.emit("bidderRegister", {
+                    bidderName: $("#bName").val()
+                });
+                e.preventDefault();
+                $("#bRegContainer").hide();
+                $("#bWaitContainer").show();
+            });
+        </script>
     </body>
 </html>
