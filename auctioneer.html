@@ -128,13 +128,18 @@
             var socket = io();
             var historyArr = [];
 
+            // Hides initial components.
             $("#timerContainer").hide();
             $("#auction").find(':input[type=submit]').prop('disabled', true);
             $("#auctioneerResults").hide();
 
+            /*
+                Auctioneer submits auction content.
+            */
             $("#auction").submit( function(e) {
                 var formFlag = true;
 
+                // Prevent submission if item name is empty.
                 if($("#itemName").val() == "") {
                     document.getElementsByClassName("error")[0].innerHTML = "<li>" + 'Item name required!' + "</li>";
                     e.preventDefault();
@@ -145,6 +150,7 @@
                     formFlag = true;
                 }
 
+                // Prevent submission if item price is belo $1.
                 if($("#price").val() < 1) {
                     document.getElementsByClassName("error")[0].innerHTML += "<li>" + 'Price must be greater than $0' + "</li>";
                     e.preventDefault();
@@ -155,6 +161,7 @@
                     formFlag = true;
                 }
 
+                // Emits auction data to server based on valid field values.
                 if(formFlag === true) {
                     socket.emit("auctionContent", {
                         itemName: $("#itemName").val(),
@@ -162,6 +169,7 @@
                         time: $("#time").val()
                     });
                     e.preventDefault();
+                    // Clears form data and hides auction creation component and reveals timer & auction results.
                     $("#auction").find('input[type="text"]').val('');
                     $("#auction").find('input[type="number"]').val('');
                     $("#auction").find('input[type="range"]').val('');
@@ -171,6 +179,7 @@
                 }
             });
 
+            // When auction timer expires, components and field values are cleared.
             socket.on("timer", function(data) {
                 document.getElementById("timerCountdown").innerHTML = data;
 
@@ -185,12 +194,20 @@
                 }
             });
 
+            /*
+                Listens to bidder registration from server & prevents submission of form if no bidder has registered by disabling the submit button.
+                Specific bidder data portion incomplete.
+            */
             socket.on("bidderRegister", function(data) {
                 $("#auction").find(':input[type=submit]').prop('disabled', false);
             });
 
+            // Listens to bidders bid data from server & displays data in table.
             socket.on("bidderBid", function(data) {
+                // Gets last element of original array and first item of sliced array.
                 historyArr = data.slice(-1)[0]; 
+
+                // Displays multiple bidders bids in table.
                 document.getElementById("historyTable").innerHTML += "<tr><td>" + historyArr.bidderName + "</td><td>" + historyArr.bidderPrice + "</td></tr>";
             });
         </script>

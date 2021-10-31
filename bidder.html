@@ -160,14 +160,18 @@
             var auctionWinner;
             var auctionBid;
 
+            // Hides initial components.
             $("#bTimerContainer").hide();
             $("#bWaitContainer").hide();
             $("#aContent").hide();
             $("#endContent").hide();
 
+
+            // User registration form submission.
             $("#bNameForm").submit( function(e) {
                 var formFlag = true;
 
+                // Prevents form submission if name is empty.
                 if($("#bName").val() == "") {
                     document.getElementsByClassName("error")[0].innerHTML = "<li>" + 'Please enter your name.' + "</li>";
                     e.preventDefault();
@@ -177,8 +181,10 @@
                     e.preventDefault();
                     formFlag = true;
                 }
+                // Emits bidder data to server based on valid field values.
                 if(formFlag === true) {
                     socket.emit("bidderRegister", {
+                        // Bidder's unique ID based on session.
                         bidderID: socket.id,
                         bidderName: $("#bName").val()
                     });
@@ -188,6 +194,9 @@
                 }
             });
 
+            /*
+                Listens to timer from server & hides components and clears field values upon timer completition.   
+            */
             socket.on('timer', function(time) {
                 document.getElementById("bTimerCountdown").innerHTML = time;
 
@@ -210,12 +219,16 @@
                 }
             });
 
+            // Listens to auction content from server and sets the auctioneers name & price as highest initial bid.
             socket.on('auctionContent', function(data) {
                 document.getElementById("itemName").innerHTML = data.itemName;
                 document.getElementById("highestBidder").innerHTML = "Auctioneer";
                 initial = (document.getElementById("highestBid").innerHTML = data.price);
             });
 
+            /*
+                Submits bidders bid & emits bidder data.
+            */
             $("#bidForm").submit( function(e) {
                 var formFlag = true;
                 var validBid;
@@ -239,13 +252,20 @@
                 }
             });
 
+            /* 
+                Listens to bidder data and determines the winner of the auction and displays this data. Awaits new auction.
+            */
             socket.on('bidderBid', function(data) {
+                // Checkes if previous bidder price is higher than the current price, determines highest bid price.
                 max = data.reduce((prev, current) => (+prev.bidderPrice > +current.bidderPrice) ? prev : current);
 
+                // Data from highest bidder is displayed during auction.
                 document.getElementById("highestBidder").innerHTML = max.bidderName;
                 document.getElementById("highestBid").innerHTML = max.bidderPrice;
+                // Displays message that the current bidder is the highest.
                 document.getElementsByClassName("bLeader")[0].innerHTML = "<li>" + 'You are the current highest bidder!' + "</li>";
                 
+                // Auction winner is displayed when timer expires.
                 auctionWinner = document.getElementById("auctionWinner").innerHTML = max.bidderName;
                 winnerBid = document.getElementById("winnerBid").innerHTML = max.bidderPrice;
             });
