@@ -1,19 +1,37 @@
+<!--
+    "StAuth10222: I Nenad Skocic, 000107650 certify that this material is my original work. No other person's work has been used 
+    without due acknowledgement. I have not made my work available to anyone else."
+ -->
 <html>
     <head>
         <title>Bidder Pager</title>
 
         <style>
             body {
-                background-color: lightsalmon;
+                background-color: lightcyan;
+            }
+            #bTimerContainer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                background-color: gray;
+                color: white;
+                width: 450px;
+                font-size: 42px;
+            }
+            #bTimerCountdown {
+                color: lightcoral;
+                align-items: center;
+                padding-left: 20px;
             }
             #bRegContainer, #bWaitContainer {
                 position: absolute;
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background-color:gray;
-                width: 800px;
-                height: 100px;
+                background-color: gray;
+                width: 900px;
+                height: 150px;
                 text-align: center;
                 display: table;
             }
@@ -28,46 +46,208 @@
             #bNameForm {
                 margin-bottom: 0;
             }
-            #bName, #submitBtn, #bWaitContainer {
+            #bName, .submitBtn {
                 font-size: 30px;
                 vertical-align: middle;
             }
-            #bWaitContainer {
+            #bWaitContainer p, #aContent, #endContent {
                 vertical-align: middle;
                 display: table-cell;
                 color: white;
+                font-size: 30px;
             }
-
+            #itemName, #highestBidder, #highestBid{
+                color: black;
+            }
+            #aContent {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color:gray;
+                width: 800px;
+                height: 350px;
+                text-align: center;
+                display: table;
+            }
+            #bidForm input {
+                font-size: 30px;
+                vertical-align: middle;
+            }
+            .error, .pError, .bLeader {
+                color: lightcoral;
+                width: 100%;
+                list-style-type: none;
+                text-align: right;
+            }
+            .error li {
+                padding: 20px 20px 0 0;
+            }
+            .pError li {
+                padding: 0 40px 0 0;
+            }
+            #aContent p, #endContent p {
+                text-align: left;
+                padding: 0 0 0 30px;
+                margin: 0;
+            }
+            #aStats, #bEndStats {
+                padding: 40px 0 40px 0;
+            }
+            .bLeader li {
+                color: green;
+                padding: 0 40px 0 0;
+            }
+            #auctionWinner, #winnerBid {
+                color: green;
+            }
         </style>
     </head>
     <body>
         <script src="/socket.io/socket.io.js"></script>
         <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
 
+        <div id="bTimerContainer">
+            Timer: <span id="bTimerCountdown"></span>
+        </div>
+
         <div id="bRegContainer">
             <span>
                 <form id="bNameForm">
                     <label>Enter your name: </label><input type="text" id="bName"></input>
-                    <input type="submit" id="submitBtn">
-                </form>    
+                    <input type="submit" class="submitBtn">
+                </form> 
+                
+                <div class="error"></div>
             </span>
         </div>
 
         <div id="bWaitContainer">
             <p>Waiting for the next auction to begin...</p>
+
+            <div id=endContent>
+                <div id=bEndStats>
+                    <p><span>Auction Winner: </span><span id="auctionWinner"></span></p>
+                    <p><span>Highest Bid ($): </span><span id="winnerBid"></span></p>
+                </div>
+            </div>
         </div>
 
+        <div id="aContent">
+            <div id="aStats">
+                <p><span>Item: </span><span id="itemName"></span></p>
+                <p><span>Highest Bidder: </span><span id="highestBidder"></span></p>
+                <p><span>Bid price ($): </span><span id="highestBid"></span></p>
+            </div>
+            <div>
+                <span>
+                    <form id="bidForm">
+                        <label>Enter your bid ($): </label><input type="number" id="bidderPrice"></input>
+                        <input type="submit" class="submitBtn">
+                    </form>    
+
+                    <div class="bLeader"></div>
+                    <div class="pError"></div>
+                </span>
+            </div>
+        </div>
+
+
         <script>
-             var socket = io();
-             $("#bWaitContainer").hide();
-             
+            var socket = io();
+            var initial;
+            var max;
+            var auctionWinner;
+            var auctionBid;
+
+            $("#bTimerContainer").hide();
+            $("#bWaitContainer").hide();
+            $("#aContent").hide();
+            $("#endContent").hide();
+
             $("#bNameForm").submit( function(e) {
-                socket.emit("bidderRegister", {
-                    bidderName: $("#bName").val()
-                });
-                e.preventDefault();
-                $("#bRegContainer").hide();
-                $("#bWaitContainer").show();
+                var formFlag = true;
+
+                if($("#bName").val() == "") {
+                    document.getElementsByClassName("error")[0].innerHTML = "<li>" + 'Please enter your name.' + "</li>";
+                    e.preventDefault();
+                    formFlag = false;
+                } else {
+                    document.getElementsByClassName("error")[0].innerHTML = "";
+                    e.preventDefault();
+                    formFlag = true;
+                }
+                if(formFlag === true) {
+                    socket.emit("bidderRegister", {
+                        bidderID: socket.id,
+                        bidderName: $("#bName").val()
+                    });
+                    e.preventDefault();
+                    $("#bRegContainer").hide();
+                    $("#bWaitContainer").show();
+                }
+            });
+
+            socket.on('timer', function(time) {
+                document.getElementById("bTimerCountdown").innerHTML = time;
+
+                if(time === "Auction is over") {
+                    document.getElementById("bTimerCountdown").innerHTML = ""; 
+                    document.getElementById("itemName").innerHTML = "";
+                    document.getElementById("highestBidder").innerHTML = "";
+                    document.getElementById("highestBid").innerHTML = "";
+                    document.getElementsByClassName("pError")[0].innerHTML = "";
+                    document.getElementsByClassName("bLeader")[0].innerHTML = "";
+                    $("#bidForm").find('input[type="number"]').val('');
+                    $("#bTimerContainer").hide();
+                    $("#aContent").hide();
+                    $("#endContent").show();
+                    $("#bWaitContainer").show();
+                } else {
+                    $("#bWaitContainer").hide();
+                    $("#aContent").show();
+                    $("#bTimerContainer").show();
+                }
+            });
+
+            socket.on('auctionContent', function(data) {
+                document.getElementById("itemName").innerHTML = data.itemName;
+                document.getElementById("highestBidder").innerHTML = "Auctioneer";
+                initial = (document.getElementById("highestBid").innerHTML = data.price);
+            });
+
+            $("#bidForm").submit( function(e) {
+                var formFlag = true;
+                var validBid;
+
+                if(parseInt($("#bidderPrice").val()) <= parseInt(initial)) {
+                    document.getElementsByClassName("pError")[0].innerHTML = "<li>" + 'Please enter a higher bid!' + "</li>";
+                    e.preventDefault();
+                    formFlag = false;
+                } else {
+                    validBid = $("#bidderPrice").val();
+                    document.getElementsByClassName("pError")[0].innerHTML = "";
+                    e.preventDefault();
+                    formFlag = true;
+                }
+                if(formFlag === true) {
+                    socket.emit("bidderBid", {
+                        bidderID: socket.id,
+                        bidderName: $("#bName").val(),
+                        bidderPrice: validBid
+                    });
+                }
+            });
+
+            socket.on('bidderBid', function(data) {
+                max = data.reduce((prev, current) => (+prev.bidderPrice > +current.bidderPrice) ? prev : current);
+
+                document.getElementById("highestBidder").innerHTML = max.bidderName;
+                document.getElementById("highestBid").innerHTML = max.bidderPrice;
+                document.getElementsByClassName("bLeader")[0].innerHTML = "<li>" + 'You are the current highest bidder!' + "</li>";
+                
+                auctionWinner = document.getElementById("auctionWinner").innerHTML = max.bidderName;
+                winnerBid = document.getElementById("winnerBid").innerHTML = max.bidderPrice;
             });
         </script>
     </body>
