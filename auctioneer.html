@@ -1,3 +1,7 @@
+<!--
+    "StAuth10222: I Nenad Skocic, 000107650 certify that this material is my original work. No other person's work has been used 
+    without due acknowledgement. I have not made my work available to anyone else."
+ -->
 <html>
     <head>
         <title>Auctioneer Page</title>
@@ -6,7 +10,7 @@
             body {
                 background-color:beige;
             }
-            #formContainer {
+            #formContainer, #auctioneerResults {
                 position: absolute;
                 top: 50%;
                 left: 50%;
@@ -18,6 +22,7 @@
             h1 {
                 text-align: center;
                 color: white;
+                font-size: 24px;
             }
             form {
                 display: grid;
@@ -25,7 +30,6 @@
                 row-gap: 15px;
                 column-gap: 15px;
                 color: white;
-
             }
             label {
                 grid-column: 1 / 2;
@@ -46,7 +50,7 @@
                 left: 0;
                 background-color:gray;
                 color: white;
-                width: 450px;
+                width: 300px;
                 font-size: 42px;
             }
             #timerCountdown {
@@ -63,6 +67,20 @@
             }
             .error li {
                 padding-right: 20px;
+            }
+            table {
+                width: 100%;
+            }
+            table, th, td {
+                border: 1px solid black;
+                color:azure;
+            }
+            #auctioneerResults {
+                background-color: darkslategray;
+                height: 600px;
+            }
+            #statsTable, #historyTable {
+                text-align: center;
             }
         </style>
     </head>
@@ -87,8 +105,32 @@
             Timer: <span id="timerCountdown"></span>
         </div>
 
+        <div id="auctioneerResults">
+            <h1>Bidder Data</h1> 
+            <table id="statsTable">
+                <tr>
+                    <th>Bidder Name</th>
+                    <th>Bider's Highest Bid</th>
+                    <th>Bider's Number of bids</th>
+                </tr>
+            </table>
+
+            <h1>History of Bids</h1> 
+            <table id="historyTable">
+                <tr>
+                    <th>Bidder Name</th>
+                    <th>Bidder Price</th>
+                </tr>
+            </table>
+        </div>
+
         <script>
             var socket = io();
+            var historyArr = [];
+
+            $("#timerContainer").hide();
+            $("#auction").find(':input[type=submit]').prop('disabled', true);
+            $("#auctioneerResults").hide();
 
             $("#auction").submit( function(e) {
                 var formFlag = true;
@@ -124,6 +166,8 @@
                     $("#auction").find('input[type="number"]').val('');
                     $("#auction").find('input[type="range"]').val('');
                     $("#formContainer").hide();
+                    $("#timerContainer").show();
+                    $("#auctioneerResults").show();
                 }
             });
 
@@ -133,7 +177,21 @@
                 if(document.getElementById("timerCountdown").innerHTML === "Auction is over") {
                     $("#formContainer").show();
                     document.getElementById("timerCountdown").innerHTML = "";
+                    $("#timerContainer").hide();
+                    $("#auctioneerResults").hide();
+                    $("#formContainer").show();
+                    document.getElementById("statsTable").innerHTML = "";
+                    document.getElementById("historyTable").innerHTML = "";
                 }
+            });
+
+            socket.on("bidderRegister", function(data) {
+                $("#auction").find(':input[type=submit]').prop('disabled', false);
+            });
+
+            socket.on("bidderBid", function(data) {
+                historyArr = data.slice(-1)[0]; 
+                document.getElementById("historyTable").innerHTML += "<tr><td>" + historyArr.bidderName + "</td><td>" + historyArr.bidderPrice + "</td></tr>";
             });
         </script>
     </body>
